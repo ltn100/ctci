@@ -1,17 +1,10 @@
 import pytest
 from contextlib import ExitStack as does_not_raise
+from collections import deque
+from graph import Node
 
 
-class Node:
-    def __init__(self, val):
-        self.val = val
-        self.children = []
-
-    def __repr__(self):
-        return str(self.val)
-
-
-class Solution:
+class SolutionDFS:
     def has_route(self, start, end):
         """
         Return True if there is a route from start to end.
@@ -22,20 +15,54 @@ class Solution:
         :param end: End node
         :return: True if nodes are connected
         """
-        return self.has_route_helper(start, end, set())
+        return self._has_route_helper(start, end, set())
 
-    def has_route_helper(self, start, end, visited):
+    def _has_route_helper(self, start, end, visited):
+        # Check visited
+        if start in visited:
+            return False
+        visited.add(start)
+
+        # Base case
         if start is end:
             return True
 
-        if start in visited:
-            return False
-
-        visited.add(start)
-
         for child in start.children:
-            if self.has_route(child, end):
+            if self._has_route_helper(child, end, visited):
                 return True
+
+        return False
+
+
+class SolutionBFS:
+    def has_route(self, start, end):
+        """
+        Return True if there is a route from start to end.
+
+        BFS graph traversal.
+
+        :param start: Start node
+        :param end: End node
+        :return: True if nodes are connected
+        """
+        visited = set()
+        queue = deque()
+
+        queue.appendleft(start)
+        while queue:
+            node = queue.pop()
+
+            # Check visited
+            if node in visited:
+                continue
+            visited.add(node)
+
+            if start == end:
+                return True
+
+            for child in node.children:
+                if self.has_route(child, end):
+                    return True
 
         return False
 
@@ -69,7 +96,14 @@ testdata = [
 @pytest.mark.parametrize("args, res, expectation", testdata)
 def test_solution(args, res, expectation):
     with expectation:
-        s = Solution()
+        s = SolutionDFS()
+        assert s.has_route(*args) == res
+
+
+@pytest.mark.parametrize("args, res, expectation", testdata)
+def test_solution(args, res, expectation):
+    with expectation:
+        s = SolutionBFS()
         assert s.has_route(*args) == res
 
 
